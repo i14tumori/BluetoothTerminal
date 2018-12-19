@@ -1,9 +1,7 @@
 # BluetoothTerminal
-Microchip社のRN4020 Bluetooth Low Energy Moduleを通じて動作するターミナルエミュレータ．
+Microchip社のRN4020 Bluetooth Low Energy Moduleを通じてMacターミナル上で動作するターミナルエミュレータ．
 
-# 動作環境
-
-## RN4020 初期設定
+# RN4020 初期設定
 1. Macにシリアル通信ソフトCoolTermをインストールする．
 2. CoolTermを起動し，以下のように設定する．
   - <pre>[options] → [Serial Port] → [Port] → RN4020を接続しているUSB Serialポートを選択</pre>
