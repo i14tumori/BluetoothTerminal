@@ -21,7 +21,7 @@ BlueTerm.shとmain.swiftをダウンロードして同一ディレクトリに�
   <pre>  ~.       : プログラム終了
   ~;       : コマンドモード
   quit     : コマンドモード終了
-  sendFile : 実行形式ファイルの送信(コマンドモードのみ)</pre>
+  sendFile : 実行形式ファイル(.out, .exe, .bin)の送信   ※コマンドモード時のみ</pre>
 
 ## 開発環境
 macOS Mojave(10.14.1)  
