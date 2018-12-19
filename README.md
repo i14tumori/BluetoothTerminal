@@ -16,7 +16,7 @@ Microchip社のRN4020 Bluetooth Low Energy Moduleを通じてMacターミナル�
  
 ## 使い方
 ### 実行方法
-BlueTerm.shとmain.swiftをダウンロードして同一ディレクトリに配置し，`./BlueTerm.sh`を実行する．　　
+BlueTerm.shとmain.swiftをダウンロードして同一ディレクトリに配置し，`./BlueTerm.sh`を実行する．  
 通信にはMLDP(Microchip Low Energy Data Profile)を使用する．
 ### 使用可能コマンド
   <pre>  ~.       : プログラム終了
