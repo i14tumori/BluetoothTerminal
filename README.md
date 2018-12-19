@@ -1,5 +1,6 @@
 # BluetoothTerminal
-Microchip社のRN4020 Bluetooth Low Energy Moduleを通じてMacターミナル上で動作するターミナルエミュレータ．
+Microchip社のRN4020 Bluetooth Low Energy Moduleを通じてMacターミナル上で動作するターミナルエミュレータ．  
+通信にはMLDP(Microchip Low Energy Data Profile)を使用する．
 
 ## RN4020 初期設定
 1. Macにシリアル通信ソフトCoolTermをインストールする．
@@ -16,8 +17,7 @@ Microchip社のRN4020 Bluetooth Low Energy Moduleを通じてMacターミナル�
  
 ## 使い方
 ### 実行方法
-BlueTerm.shとmain.swiftをダウンロードして同一ディレクトリに配置し，`./BlueTerm.sh`を実行する．  
-通信にはMLDP(Microchip Low Energy Data Profile)を使用する．
+BlueTerm.shとmain.swiftをダウンロードして同一ディレクトリに配置し，`./BlueTerm.sh`を実行する．
 ### 使用可能コマンド
   <pre>  ~.       : プログラム終了
   ~;       : コマンドモード
