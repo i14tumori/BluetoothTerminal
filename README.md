@@ -10,7 +10,7 @@ Microchip社のRN4020 Bluetooth Low Energy Moduleを通じて動作するター�
   - [options] → [Serial Port] → [Baudrate] → 115200を選択
 1. CoolTermに'+'とEnterキーを入力する．Echo Onと出力されれば，接続成功．
 1. CoolTermに以下のコマンドを打ち込む．
-  - SF,2#Spaces// 工場出荷状態までリセット
+  - SF,2           // 工場出荷状態までリセット
   - SR,32104C00    // RN4020起動時に自動アドバタイズおよびMLDPモードとして動作するように設定
   - R,1            // 再起動  
   ※ RN4020が正常に動作していれば入力に対して'AOK'と返ってくる．
