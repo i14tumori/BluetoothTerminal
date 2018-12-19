@@ -26,4 +26,5 @@ BlueTerm.shとmain.swiftをダウンロードして同一ディレクトリに�
 ## 開発環境
 macOS Mojave(10.14.1)  
 Xcode 10.1  
+CoolTerm 1.5.0  
 Swift 4.2.1
