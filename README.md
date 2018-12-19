@@ -17,8 +17,13 @@ Microchip社のRN4020 Bluetooth Low Energy Moduleを通じてMacターミナル�
 ## 使い方
 ### 実行方法
 BlueTerm.shとmain.swiftをダウンロードして同一ディレクトリに配置し，`./BlueTerm.sh`を実行する．
-### 使用コマンド
+### 使用可能コマンド
   <pre>  ~.       : プログラム終了
   ~;       : コマンドモード
   quit     : コマンドモード終了
   sendFile : 実行形式ファイルの送信(コマンドモードのみ)</pre>
+
+## 開発環境
+macOS Mojave(10.14.1)  
+Xcode 10.1  
+Swift 4.2.1
