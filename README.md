@@ -12,7 +12,7 @@ TeC7b(Tokuyama Educational Computer Ver.7b)に搭載されたRN4020は，ボー�
   <pre>  [options] → [Serial Port] → [Port] → TeC7bを接続しているUSB Serialポートを選択
   [options] → [Terminal] → [Enter Key Emulation] → CRを選択  
   
-  ※ TeC7bのファームウェアが最新版(2018/12/1現在)でない場合はさらに
+  ※ TeC7bのファームウェアが最新版(2018/12/1時点)でない場合はさらに
       [options] → [Serial Port] → [Baudrate] → 11520を選択
     の設定が必要になる．</pre>
 4. CoolTermに'+'とEnterキーを入力する．Echo Onと出力されれば，接続成功．
@@ -21,7 +21,7 @@ TeC7b(Tokuyama Educational Computer Ver.7b)に搭載されたRN4020は，ボー�
   SR,32104C00    // RN4020起動時に自動アドバタイズおよびMLDPモードとして動作するように設定
   R,1            // 再起動
   
-  * TeC7bのファームウェアが最新版(2018/12/1現在)でない場合は再起動の前に
+  * TeC7bのファームウェアが最新版(2018/12/1時点)でない場合は再起動の前に
       SB,1       // ボーレートを9600に設定
     を実行する．</pre>  
   ※ RN4020が正常に動作していればSF，SRに対して`AOK`と返ってくる．`R,1`の実行後，CMDが表示されると設定が終了する．
