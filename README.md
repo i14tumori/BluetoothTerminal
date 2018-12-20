@@ -6,7 +6,7 @@ Microchip社のRN4020 Bluetooth Low Energy Moduleを通じてMacターミナル�
 TeC7b(Tokuyama Educational Computer Ver.7b)に搭載されたRN4020は，ボード上のジャンパを二本横差しすることで工場出荷時までリセットすることができる．
 
 ## RN4020 初期設定
-1. Macにシリアル通信ソフトCoolTermをインストールする．  
+1. Macにシリアル通信ソフトCoolTermをインストールする．(screenコマンドでも可能)  
 2. TeC7bのジャンパをDEMO1に設定し，MacとUSBケーブルで接続する．　　
 3. CoolTermを起動し，以下のように設定する．
   <pre>  [options] → [Serial Port] → [Port] → TeC7bを接続しているUSB Serialポートを選択
@@ -19,8 +19,12 @@ TeC7b(Tokuyama Educational Computer Ver.7b)に搭載されたRN4020は，ボー�
 5. CoolTermに以下のコマンドを打ち込む．
   <pre>  SF,2           // 工場出荷状態までリセット
   SR,32104C00    // RN4020起動時に自動アドバタイズおよびMLDPモードとして動作するように設定
-  R,1            // 再起動</pre>  
-  ※ RN4020が正常に動作していればSF，SRに対して'AOK'と返ってくる．`R,1`の実行後，CMDが表示されると設定が終了する．
+  R,1            // 再起動
+  
+  * TeC7bのファームウェアが最新版(2018/12/1現在)でない場合は再起動の前に
+      SB,1       // ボーレートを9600に設定
+    を実行する．</pre>  
+  ※ RN4020が正常に動作していればSF，SRに対して`AOK`と返ってくる．`R,1`の実行後，CMDが表示されると設定が終了する．
  
 ## 使い方
 ### 実行方法
