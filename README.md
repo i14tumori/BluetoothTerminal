@@ -2,18 +2,25 @@
 Microchip社のRN4020 Bluetooth Low Energy Moduleを通じてMacターミナル上で動作するターミナルエミュレータ．  
 通信にはMLDP(Microchip Low Energy Data Profile)を使用する．
 
+## RN4020 初期化
+TeC7bに搭載されたRN4020は，ボード上のジャンパを二本横差しすることで工場出荷時までリセットすることができる．
+
 ## RN4020 初期設定
 1. Macにシリアル通信ソフトCoolTermをインストールする．
-2. CoolTermを起動し，以下のように設定する．
-  <pre>  [options] → [Serial Port] → [Port] → RN4020を接続しているUSB Serialポートを選択
-  [options] → [Serial Port] → [Baudrate] → 115200を選択</pre>
-3. CoolTermに'+'とEnterキーを入力する．Echo Onと出力されれば，接続成功．
-4. CoolTermに以下のコマンドを打ち込む．
+2. TeC7bのジャンパをDEMO1に設定し，MacとUSBケーブルで接続する．　　
+3. CoolTermを起動し，以下のように設定する．
+  <pre>  [options] → [Serial Port] → [Port] → TeC7bを接続しているUSB Serialポートを選択
+  [options] → [Terminal] → [Enter Key Emulation] → CRを選択  
+  
+  ※ TeC7bのファームウェアが最新版(2018/12/1現在)でない場合はさらに
+      [options] → [Serial Port] → [Baudrate] → 11520を選択
+    の設定が必要になる．</pre>
+4. CoolTermに'+'とEnterキーを入力する．Echo Onと出力されれば，接続成功．
+5. CoolTermに以下のコマンドを打ち込む．
   <pre>  SF,2           // 工場出荷状態までリセット
   SR,32104C00    // RN4020起動時に自動アドバタイズおよびMLDPモードとして動作するように設定
   R,1            // 再起動</pre>  
-  ※ RN4020が正常に動作していれば入力に対して'AOK'と返ってくる．
-    使用するデバイスに応じて，SBコマンドによりボーレートを変更する必要がある．
+  ※ RN4020が正常に動作していればSF，SRに対して'AOK'，Rに対してCMDと返ってくる．
  
 ## 使い方
 ### 実行方法
