@@ -3,7 +3,7 @@ Microchip社のRN4020 Bluetooth Low Energy Moduleを通じてMacターミナル�
 通信にはMLDP(Microchip Low Energy Data Profile)を使用する．
 
 ## RN4020 初期化
-TeC7bに搭載されたRN4020は，ボード上のジャンパを二本横差しすることで工場出荷時までリセットすることができる．
+TeC7b(Tokuyama Educational Computer Ver.7b)に搭載されたRN4020は，ボード上のジャンパを二本横差しすることで工場出荷時までリセットすることができる．
 
 ## RN4020 初期設定
 1. Macにシリアル通信ソフトCoolTermをインストールする．  
