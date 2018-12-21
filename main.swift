@@ -401,7 +401,9 @@ func writeProcess(_ rn: RN4020) {
                     if cmd.count > 0 {
                         cmd.removeLast()
                     }
-                    // BS(後退)を出力する
+                    // 表示を一字消す
+                    standardOutput.write("\u{08}".data(using: .utf8)!)
+                    standardOutput.write(" ".data(using: .utf8)!)
                     standardOutput.write("\u{08}".data(using: .utf8)!)
                 }
             }
@@ -537,9 +539,10 @@ func selectDevice(_ rn: RN4020) {
         // deleteのとき
         else if dataString == "\u{7f}" {
             selectNumber = selectNumber / 10
-            // BS(後退)を出力する
+            // 表示を一字消す
             standardOutput.write("\u{08}".data(using: .utf8)!)
-            standardOutput.write(("\r\n" + String(selectNumber) + "\r\n").data(using: .utf8)!)
+            standardOutput.write(" ".data(using: .utf8)!)
+            standardOutput.write("\u{08}".data(using: .utf8)!)
         }
     }
 }
