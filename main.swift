@@ -127,9 +127,7 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             // デバイス番号を増やす
             deviceNumber += 1
             // 発見デバイスを表示する
-            changeColor()
             standardOutput.write("deviceNumber \(deviceNumber) : \(peripheral.name!)\r\n".data(using: .utf8)!)
-            resetColor()
             discoverDevice.append(peripheral)
         }
     }
@@ -239,9 +237,12 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     // データ更新時に呼ばれる
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         if error != nil {
-            changeColor()
-            standardOutput.write("\(error.debugDescription)\r\n".data(using: .utf8)!)
-            resetColor()
+            // 受け取ったデータがnilではないとき
+            if characteristic.value != nil {
+                changeColor()
+                standardOutput.write("\(error.debugDescription)\r\n".data(using: .utf8)!)
+                resetColor()
+            }
             return
         }
         
@@ -270,7 +271,7 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func responseCommand(data: Data) {
         var response = data
         // CRの場合は改行に置き換える
-        if String(data: data, encoding: .utf8)! == "\r" {
+        if String(data: data, encoding: .utf8) == "\r" {
             response = "\r\n".data(using: .utf8)!
         }
         // 標準出力
@@ -324,6 +325,7 @@ func writeProcess(_ rn: RN4020) {
                         resetColor()
                     }
                     else {
+                        var valid = true
                         switch cmdArray[1] {
                         case "black":
                             highLightColor = "\u{1b}[30m"
@@ -343,7 +345,13 @@ func writeProcess(_ rn: RN4020) {
                             highLightColor = "\u{1b}[37m"
                         default :
                             changeColor()
-                            standardOutput.write("Invalid color\r\navailable color : [black, red, green, yellow, blue, magenta, cyan, white]\r\n".data(using: .utf8)!)
+                            standardOutput.write("\(cmdArray[1]) is Invalid color\r\navailable color : [black, red, green, yellow, blue, magenta, cyan, white]\r\n".data(using: .utf8)!)
+                            resetColor()
+                            valid = false
+                        }
+                        if valid {
+                            changeColor()
+                            standardOutput.write("SystemColor Changed\r\n".data(using: .utf8)!)
                             resetColor()
                         }
                     }
@@ -364,14 +372,16 @@ func writeProcess(_ rn: RN4020) {
                 // cmdModeコマンド
                 else if cmdArray[0] == "~;" {
                     changeColor()
-                    standardOutput.write("Already in cmdMode\r\n".data(using: .utf8)!)
+                    standardOutput.write("Already in commandMode\r\n".data(using: .utf8)!)
                     resetColor()
                 }
                 // コマンドではなかったとき
                 else {
-                    changeColor()
-                    standardOutput.write("Invalid command\r\n".data(using: .utf8)!)
-                    resetColor()
+                    if cmdArray[0] != "" {
+                        changeColor()
+                        standardOutput.write("\(cmdArray[0]) is Invalid command\r\n".data(using: .utf8)!)
+                        resetColor()
+                    }
                 }
                 // コマンドを初期化
                 cmd = ""
@@ -391,6 +401,8 @@ func writeProcess(_ rn: RN4020) {
                     if cmd.count > 0 {
                         cmd.removeLast()
                     }
+                    // BS(後退)を出力する
+                    standardOutput.write("\u{08}".data(using: .utf8)!)
                 }
             }
         }
@@ -442,6 +454,8 @@ func fileSelect(_ rn: RN4020) {
     openPanel.canChooseFiles = true
     // ファイルの種類を制限する
     openPanel.allowedFileTypes = ["out", "exe", "bin"]
+    // ウィンドウを最前面に表示する
+    openPanel.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.floatingWindow)))
     
     // OKが押されたとき
     if openPanel.runModal().rawValue == NSApplication.ModalResponse.OK.rawValue {
@@ -519,6 +533,13 @@ func selectDevice(_ rn: RN4020) {
                 // 選択番号を初期化する
                 selectNumber = 0
             }
+        }
+        // deleteのとき
+        else if dataString == "\u{7f}" {
+            selectNumber = selectNumber / 10
+            // BS(後退)を出力する
+            standardOutput.write("\u{08}".data(using: .utf8)!)
+            standardOutput.write(("\r\n" + String(selectNumber) + "\r\n").data(using: .utf8)!)
         }
     }
 }
