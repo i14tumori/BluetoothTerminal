@@ -283,6 +283,7 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 
 // Bluetoothに書き込むプロセス
 func writeProcess(_ rn: RN4020) {
+    rawOn()
     let standardInput = FileHandle.standardInput
     let standardOutput = FileHandle.standardOutput
     // モード切替のフラグ
@@ -379,7 +380,7 @@ func writeProcess(_ rn: RN4020) {
                 else {
                     if cmdArray[0] != "" {
                         changeColor()
-                        standardOutput.write("\(cmdArray[0]) is Invalid command\r\n".data(using: .utf8)!)
+                        standardOutput.write("\(cmdArray[0]): Command not found.\r\n".data(using: .utf8)!)
                         resetColor()
                     }
                 }
@@ -427,9 +428,7 @@ func writeProcess(_ rn: RN4020) {
         end.append(dataString)
         // 終了コマンドのとき
         if end.joined() == "~." {
-            // 改行を出力して終了する
-            rn.standardOutput.write("\r\n".data(using: .utf8)!)
-            exit(0)
+            close(rn)
         }
         // コマンドモードになるとき
         else if end.joined() == "~;" && !cmdMode {
@@ -497,6 +496,7 @@ func fileSelect(_ rn: RN4020) {
 
 // 接続デバイスを選択するプロセス
 func selectDevice(_ rn: RN4020) {
+    rawOn()
     let standardInput = FileHandle.standardInput
     changeColor()
     standardOutput.write("Please select device Number\r\n".data(using: .utf8)!)
@@ -514,7 +514,7 @@ func selectDevice(_ rn: RN4020) {
         }
         end.append(dataString)
         if end.joined() == "~." {
-            exit(0)
+            close(rn)
         }
         
         // 数字のとき
@@ -547,6 +547,15 @@ func selectDevice(_ rn: RN4020) {
     }
 }
 
+// プログラムを終了する関数
+func close(_ rn: RN4020) {
+    // 改行を出力する
+    rn.standardOutput.write("\r\n".data(using: .utf8)!)
+    // rawモードを無効にする
+    rawOff()
+    exit(0)
+}
+
 // 出力色を変更する関数
 func changeColor() {
     standardOutput.write(highLightColor.data(using: .utf8)!)
@@ -557,9 +566,27 @@ func resetColor() {
     standardOutput.write("\u{1b}[0m".data(using: .utf8)!)
 }
 
+// rawモードを有効にする関数
+func rawOn() {
+    let task: Process = Process()
+    task.launchPath = "/bin/bash"
+    task.arguments = ["-c", "stty raw"]
+    task.launch()
+}
+
+// rawモードを無効にする関数
+func rawOff() {
+    let task: Process = Process()
+    task.launchPath = "/bin/bash"
+    task.arguments = ["-c", "stty -raw"]
+    task.launch()
+}
+
 /* main関数 */
 
 let standardOutput = FileHandle.standardOutput
+
+rawOn()
 
 // インスタンス生成
 var rn = RN4020()
