@@ -6,6 +6,15 @@
 //  Copyright © 2018年 津森智己. All rights reserved.
 //
 
+// 使用可能コマンド一覧
+//  sendFile        : ファイル送信
+//  setSysColor     : システムカラー変更
+//  resetColor      : システムカラーリセット
+//  ~;              : コマンドモード
+//  quit            : コマンドモード終了
+//  disconnect      : 通信切断
+//  ~.              : プログラム終了
+
 import Foundation
 import CoreBluetooth
 import Cocoa
@@ -38,7 +47,7 @@ let maxLength = 20
 var end = [String]()
 // 選択デバイス番号
 var selectNumber = 0
-
+// システムカラー
 var highLightColor = "\u{1b}[36m"
 
 class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
@@ -89,32 +98,20 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         
         switch central.state {
         case .poweredOff:
-            changeColor()
-            standardOutput.write("Bluetooth power OFF\r\n".data(using: .utf8)!)
-            resetColor()
+            systemOutput(str: "Bluetooth power OFF\r\n")
             exit(0)
         case .poweredOn:
-            changeColor()
-            standardOutput.write("Bluetooth power ON\r\n".data(using: .utf8)!)
-            resetColor()
+            systemOutput(str: "Bluetooth power ON\r\n")
         case .resetting:
-            changeColor()
-            standardOutput.write("Resting\r\n".data(using: .utf8)!)
-            resetColor()
+            systemOutput(str: "Resetting\r\n")
         case .unauthorized:
-            changeColor()
-            standardOutput.write("Unauthenticated\r\n".data(using: .utf8)!)
-            resetColor()
+            systemOutput(str: "Unauthenticated\r\n")
             exit(0)
         case .unknown:
-            changeColor()
-            standardOutput.write("Unknown\r\n".data(using: .utf8)!)
-            resetColor()
+            systemOutput(str: "Unknown\r\n")
             exit(0)
         case .unsupported:
-            changeColor()
-            standardOutput.write("Unsupported\r\n".data(using: .utf8)!)
-            resetColor()
+            systemOutput(str: "Unsupported\r\n")
             exit(0)
         }
     }
@@ -136,9 +133,7 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func connect(_ number: Int) -> Bool {
         // デバイス番号が間違っているとき
         if number > discoverDevice.count || number < 1 {
-            changeColor()
-            standardOutput.write("Invalid deviceNumber\r\n".data(using: .utf8)!)
-            resetColor()
+            systemOutput(str: "Invalid Device Number\r\n")
             return false
         }
         
@@ -155,9 +150,7 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     // ペリフェラルへの接続が成功すると呼ばれる
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         if peripheral.name != nil {
-            changeColor()
-            standardOutput.write("Connection Success\r\ndeviceName : \(peripheral.name!)\r\n".data(using: .utf8)!)
-            resetColor()
+            systemOutput(str: "Connection Success\r\ndeviceName : \(peripheral.name!)\r\n")
         }
         
         // サービス探索結果を受け取るためにデリゲートをセット
@@ -176,9 +169,7 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         }
         
         guard let services = peripheral.services, services.count > 0 else {
-            changeColor()
-            standardOutput.write("No services\r\n".data(using: .utf8)!)
-            resetColor()
+            systemOutput(str: "No Services\r\n")
             return
         }
         
@@ -196,9 +187,7 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         }
         
         guard let characteristics = service.characteristics, characteristics.count > 0 else {
-            changeColor()
-            standardOutput.write("No characteristics\r\n".data(using: .utf8)!)
-            resetColor()
+            systemOutput(str: "No Characteristics\r\n")
             return
         }
         
@@ -213,9 +202,7 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             peripheral.setNotifyValue(true, for: characteristic)
             
             // データを送信してMLDPモードにする
-            changeColor()
             let str = "CONNECT\r\n"
-            resetColor()
             let data = str.data(using: String.Encoding.utf8)
             peripheral.writeValue(data!, for: outputCharacteristic, type: CBCharacteristicWriteType.withResponse)
         }
@@ -224,9 +211,7 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     // Notify開始／停止時に呼ばれる
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
         if error != nil {
-            changeColor()
-            standardOutput.write("\(error.debugDescription)\r\n".data(using: .utf8)!)
-            resetColor()
+            systemOutput(str: "\(error.debugDescription)\r\n")
             return
         }
         
@@ -239,9 +224,7 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         if error != nil {
             // 受け取ったデータがnilではないとき
             if characteristic.value != nil {
-                changeColor()
-                standardOutput.write("\(error.debugDescription)\r\n".data(using: .utf8)!)
-                resetColor()
+                systemOutput(str: "\(error.debugDescription)\r\n")
             }
             return
         }
@@ -260,9 +243,7 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
         // 失敗したらエラー文を出力する
         if error != nil {
-            changeColor()
-            standardOutput.write("Write failed...error: \(error.debugDescription), characteristic uuid: \(characteristic.uuid)\r\n".data(using: .utf8)!)
-            resetColor()
+            systemOutput(str: "Write failed...error: \(error.debugDescription), characteristic uuid: \(characteristic.uuid)\r\n")
             return
         }
     }
@@ -283,7 +264,6 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 
 // Bluetoothに書き込むプロセス
 func writeProcess(_ rn: RN4020) {
-    rawOn()
     let standardInput = FileHandle.standardInput
     let standardOutput = FileHandle.standardOutput
     // モード切替のフラグ
@@ -321,9 +301,7 @@ func writeProcess(_ rn: RN4020) {
                 // 文字色変更コマンド
                 else if cmdArray[0] == "setSysColor" {
                     if cmdArray.count == 1  || cmdArray[1] == "" {
-                        changeColor()
-                        standardOutput.write("Syntax error : setSysColor [color]\r\n".data(using: .utf8)!)
-                        resetColor()
+                        systemOutput(str: "Syntax error : setSysColor [color]\r\n")
                     }
                     else {
                         var valid = true
@@ -345,43 +323,43 @@ func writeProcess(_ rn: RN4020) {
                         case "white":
                             highLightColor = "\u{1b}[37m"
                         default :
-                            changeColor()
-                            standardOutput.write("\(cmdArray[1]) is Invalid color\r\navailable color : [black, red, green, yellow, blue, magenta, cyan, white]\r\n".data(using: .utf8)!)
-                            resetColor()
+                            systemOutput(str: "\(cmdArray[1]) is Invalid color\r\navailable color : [black, red, green, yellow, blue, magenta, cyan, white]\r\n")
                             valid = false
                         }
                         if valid {
-                            changeColor()
-                            standardOutput.write("SystemColor Changed\r\n".data(using: .utf8)!)
-                            resetColor()
+                            systemOutput(str: "SystemColor Changed\r\n")
                         }
                     }
                 }
                 // 文字色初期化コマンド
                 else if cmdArray[0] == "resetColor" {
                     highLightColor = "\u{1b}[36m"
+                    systemOutput(str: "SystemColor Changed\r\n")
                 }
                 // cmdMode終了コマンド
                 else if cmdArray[0] == "quit" {
                     // コマンドモードを終了する
                     cmdMode = false
                     // 終了を出力する
-                    changeColor()
-                    standardOutput.write("rawMode\r\n".data(using: .utf8)!)
-                    resetColor()
+                    systemOutput(str: "rawMode\r\n")
                 }
                 // cmdModeコマンド
                 else if cmdArray[0] == "~;" {
-                    changeColor()
-                    standardOutput.write("Already in commandMode\r\n".data(using: .utf8)!)
-                    resetColor()
+                    systemOutput(str: "Already in commandMode\r\n")
+                }
+                // 通信切断コマンド
+                else if cmdArray[0] == "disconnect" {
+                    // 通知を切る
+                    rn.peripheral.setNotifyValue(false, for: rn.outputCharacteristic)
+                    // 通信を切断する
+                    rn.centralManager.cancelPeripheralConnection(rn.peripheral)
+                    // スレッド終了
+                    return
                 }
                 // コマンドではなかったとき
                 else {
                     if cmdArray[0] != "" {
-                        changeColor()
-                        standardOutput.write("\(cmdArray[0]): Command not found.\r\n".data(using: .utf8)!)
-                        resetColor()
+                        systemOutput(str: "\(cmdArray[0]): Command not found.\r\n")
                     }
                 }
                 // コマンドを初期化
@@ -435,11 +413,10 @@ func writeProcess(_ rn: RN4020) {
             // コマンドモード用のフラグを立てる
             cmdMode = true
             // コマンドモードになったことを出力する
-            changeColor()
-            standardOutput.write("commandMode\r\n".data(using: .utf8)!)
-            resetColor()
+            systemOutput(str: "commandMode\r\n")
         }
     }
+
 }
 
 // 読み込みファイルを選択する関数
@@ -487,20 +464,15 @@ func fileSelect(_ rn: RN4020) {
                 rn.peripheral.writeValue(content!.subdata(in: index..<index + range), for: rn.outputCharacteristic, type: CBCharacteristicWriteType.withResponse)
                 index += range
             }
-            changeColor()
-            standardOutput.write("send completely\r\n".data(using: .utf8)!)
-            resetColor()
+            systemOutput(str: "Send Completely\r\n")
         }
     }
 }
 
 // 接続デバイスを選択するプロセス
 func selectDevice(_ rn: RN4020) {
-    rawOn()
     let standardInput = FileHandle.standardInput
-    changeColor()
-    standardOutput.write("Please select device Number\r\n".data(using: .utf8)!)
-    resetColor()
+    systemOutput(str: "Please Select Device Number\r\n")
     // 標準入力を待ち続ける
     while true {
         // 標準入力
@@ -528,6 +500,7 @@ func selectDevice(_ rn: RN4020) {
             standardOutput.write("\r\n".data(using: .utf8)!)
             // 選択番号が正しいとき
             if rn.connect(selectNumber) {
+                // スレッド終了
                 return
             }
             // 選択番号が正しくないとき
@@ -564,6 +537,13 @@ func changeColor() {
 // 出力色を初期化する関数
 func resetColor() {
     standardOutput.write("\u{1b}[0m".data(using: .utf8)!)
+}
+
+// 文字を出力する関数
+func systemOutput(str: String) {
+    changeColor()
+    standardOutput.write(str.data(using: .utf8)!)
+    resetColor()
 }
 
 // rawモードを有効にする関数
@@ -625,10 +605,13 @@ while running == true && runLoop.run(mode: RunLoop.Mode.default, before: distant
         // 別スレッドでキーボード入力を待つ
         let dispatchQueue = DispatchQueue.global(qos: .default)
         dispatchQueue.async {
-            changeColor()
-            standardOutput.write("Allow writing\r\n\r\n".data(using: .utf8)!)
-            resetColor()
+            systemOutput(str: "Allow Writing\r\n\r\n")
             writeProcess(rn)
+            // 通信切断コマンドの後で実行される
+            systemOutput(str: "\r\nDisconnected\r\n\r\n")
+            rn = RN4020()
+            rn.generation()
+            enter = false
         }
         // 最初以外のスレッドを作らないためにフラグを下ろす
         rn.ready = false
