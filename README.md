@@ -30,10 +30,11 @@ TeC7b(Tokuyama Educational Computer Ver.7b)に搭載されたRN4020は，ボー�
 ### 実行方法
 BlueTerm.shとmain.swiftをダウンロードして同一ディレクトリに配置し，`./BlueTerm.sh`を実行する．
 ### 使用可能コマンド
-  <pre>  ~.       : プログラム終了
-  ~;       : コマンドモード
-  quit     : コマンドモード終了
-  sendFile : 実行形式ファイル(.out, .exe, .bin)の送信   ※コマンドモード時のみ</pre>
+  <pre>  ~.         : プログラム終了
+  ~;         : コマンドモード
+  quit       : コマンドモード終了
+  sendFile   : 実行形式ファイル(.out, .exe, .bin)の送信   ※コマンドモード時のみ
+  disconnect : 通信の切断</pre>
 
 ## 開発環境
 macOS Mojave(10.14.1)  
