@@ -50,6 +50,8 @@ var selectNumber = 0
 // システムカラー
 var highLightColor = "\u{1b}[36m"
 
+var cmdMode = false
+
 class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     // Bluetooth関連変数
     var centralManager: CBCentralManager!
@@ -228,6 +230,9 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             }
             return
         }
+        else if cmdMode {
+            return
+        }
         
         // Bluetoothから送信されたデータを取り出す
         let data = characteristic.value
@@ -267,7 +272,7 @@ func writeProcess(_ rn: RN4020) {
     let standardInput = FileHandle.standardInput
     let standardOutput = FileHandle.standardOutput
     // モード切替のフラグ
-    var cmdMode = false
+    cmdMode = false
     // コマンド
     var cmd = ""
     // 標準入力を待ち続ける
