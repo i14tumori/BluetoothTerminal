@@ -39,6 +39,10 @@ extension String {
     func isASCII() -> Bool {
         return self >= "\u{00}" && self <= "\u{7f}"
     }
+    // アルファベット判定
+    func isAlpha() -> Bool {
+        return self >= "a" && self <= "z" || self >= "A" && self <= "Z"
+    }
 }
 
 // 一度にBluetoothデバイスに送信できる最大文字数
@@ -49,8 +53,15 @@ var end = [String]()
 var selectNumber = 0
 // システムカラー
 var highLightColor = "\u{1b}[36m"
-
+// スレッド制御変数
+var enter = false
+// モード判定
 var cmdMode = false
+// 接続状況判定
+var connection = false
+// 切断状況判定
+var explicitDisconnect = false
+
 
 class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     // Bluetooth関連変数
@@ -155,6 +166,9 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             systemOutput(str: "Connection Success\r\ndeviceName : \(peripheral.name!)\r\n")
         }
         
+        // 接続状況
+        connection = true
+        
         // サービス探索結果を受け取るためにデリゲートをセット
         self.peripheral.delegate = self as CBPeripheralDelegate
         
@@ -202,11 +216,12 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             
             // 更新通知受け取りを開始する
             peripheral.setNotifyValue(true, for: characteristic)
-            
+            /*
             // データを送信してMLDPモードにする
             let str = "CONNECT\r\n"
             let data = str.data(using: String.Encoding.utf8)
             peripheral.writeValue(data!, for: outputCharacteristic, type: CBCharacteristicWriteType.withResponse)
+            */
         }
     }
     
@@ -253,13 +268,26 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         }
     }
     
+    // ペリフェラルとの切断が完了すると呼ばれる
+    func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        
+        // 接続状況
+        connection = false
+        
+        // 予期しない切断のとき
+        if !explicitDisconnect {
+            systemOutput(str: "\r\nConnection is lost\r\n\r\n")
+            exit(0)
+        }
+        // 意図的な切断のとき
+        else {
+            explicitDisconnect = false
+        }
+    }
+    
     // Bluetoothからの入力を標準出力する
     func responseCommand(data: Data) {
-        var response = data
-        // CRの場合は改行に置き換える
-        if String(data: data, encoding: .utf8) == "\r" {
-            response = "\r\n".data(using: .utf8)!
-        }
+        let response = data
         // 標準出力
         let standardOutput = FileHandle.standardOutput
         standardOutput.write(response)
@@ -354,6 +382,8 @@ func writeProcess(_ rn: RN4020) {
                 }
                 // 通信切断コマンド
                 else if cmdArray[0] == "disconnect" {
+                    // 明示的切断
+                    explicitDisconnect = true
                     // 通知を切る
                     rn.peripheral.setNotifyValue(false, for: rn.outputCharacteristic)
                     // 通信を切断する
@@ -386,19 +416,23 @@ func writeProcess(_ rn: RN4020) {
                         cmd.removeLast()
                     }
                     // 表示を一字消す
-                    standardOutput.write("\u{08}".data(using: .utf8)!)
-                    standardOutput.write(" ".data(using: .utf8)!)
-                    standardOutput.write("\u{08}".data(using: .utf8)!)
+                    systemOutput(str: "\u{08} \u{08}")
                 }
             }
         }
         // 通信モードのとき
         else {
             // ペリフェラルにデータを書き込む
-            let data = dataString.data(using: String.Encoding.utf8)
+            var data = dataString.data(using: String.Encoding.utf8)
             // データが存在するとき
             if data != nil {
+                if String(data: data!, encoding: .utf8)! == "\u{7f}" {
+                    data = "\u{08}".data(using: .utf8)!
+                }
                 rn.peripheral.writeValue(data!, for: rn.outputCharacteristic, type: CBCharacteristicWriteType.withResponse)
+            }
+            else {
+                systemOutput(str: "hit\r\n")
             }
         }
         
@@ -505,6 +539,8 @@ func selectDevice(_ rn: RN4020) {
             standardOutput.write("\r\n".data(using: .utf8)!)
             // 選択番号が正しいとき
             if rn.connect(selectNumber) {
+                // 接続されるのを待つ
+                waiting(rn)
                 // スレッド終了
                 return
             }
@@ -518,9 +554,22 @@ func selectDevice(_ rn: RN4020) {
         else if dataString == "\u{7f}" {
             selectNumber = selectNumber / 10
             // 表示を一字消す
-            standardOutput.write("\u{08}".data(using: .utf8)!)
-            standardOutput.write(" ".data(using: .utf8)!)
-            standardOutput.write("\u{08}".data(using: .utf8)!)
+            systemOutput(str: "\u{08} \u{08}")
+        }
+    }
+}
+
+// 接続待ち関数
+func waiting(_ rn: RN4020) {
+    // 5秒待つ
+    DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+        // 接続できなかったとき
+        if !connection {
+            // 接続をキャンセルする
+            rn.centralManager.cancelPeripheralConnection(rn.peripheral)
+            systemOutput(str: "\r\n" + rn.peripheral.name! + " is not found\r\n")
+            // プログラムを終了する
+            close(rn)
         }
     }
 }
@@ -579,8 +628,6 @@ rn.generation()
 
 let standardInput = FileHandle.standardInput
 
-var enter = false
-
 let runLoop = RunLoop.current
 let distantFuture = Date.distantFuture
 var running = true
@@ -616,6 +663,7 @@ while running == true && runLoop.run(mode: RunLoop.Mode.default, before: distant
             systemOutput(str: "\r\nDisconnected\r\n\r\n")
             rn = RN4020()
             rn.generation()
+            selectNumber = 0
             enter = false
         }
         // 最初以外のスレッドを作らないためにフラグを下ろす
