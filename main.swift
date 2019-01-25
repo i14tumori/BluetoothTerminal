@@ -61,6 +61,8 @@ var cmdMode = false
 var connection = false
 // 切断状況判定
 var explicitDisconnect = false
+// 切断コマンド
+var disconnect = false
 
 
 class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
@@ -75,11 +77,12 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     var discoverDevice = [CBPeripheral]()
     // デバイス番号
     var deviceNumber = 0
+    // インスタンス生成フラグ
+    var generated = false
     
     // その他の変数
     var isScanning = false
     var ready = false
-    var full = false
     var count = 0
     
     // ターゲットデバイス名
@@ -106,6 +109,8 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     // セントラルマネージャの状態が変化すると呼ばれる
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        // インスタンス生成を通知する
+        generated = true
         // ペリフェラルスキャンを許可する
         isScanning = true
         
@@ -134,6 +139,11 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func centralManager(_ central: CBCentralManager,didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         // ペリフェラル名がnilではない かつ 初回発見　のとき
         if peripheral.name != nil && !discoverDevice.contains(peripheral) {
+            // 最初のペリフェラル発見のとき
+            if deviceNumber == 0 {
+                // 1行上の文字列を消去する
+                systemOutput(str: "\u{1b}[A\u{1b}[J")
+            }
             // デバイス番号を増やす
             deviceNumber += 1
             // 発見デバイスを表示する
@@ -216,12 +226,11 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             
             // 更新通知受け取りを開始する
             peripheral.setNotifyValue(true, for: characteristic)
-            /*
+            
             // データを送信してMLDPモードにする
-            let str = "CONNECT\r\n"
+            let str = "MLDP\r\nApp:on\r\n"
             let data = str.data(using: String.Encoding.utf8)
             peripheral.writeValue(data!, for: outputCharacteristic, type: CBCharacteristicWriteType.withResponse)
-            */
         }
     }
     
@@ -384,6 +393,8 @@ func writeProcess(_ rn: RN4020) {
                 else if cmdArray[0] == "disconnect" {
                     // 明示的切断
                     explicitDisconnect = true
+                    // 切断コマンド
+                    disconnect = true
                     // 通知を切る
                     rn.peripheral.setNotifyValue(false, for: rn.outputCharacteristic)
                     // 通信を切断する
@@ -430,9 +441,6 @@ func writeProcess(_ rn: RN4020) {
                     data = "\u{08}".data(using: .utf8)!
                 }
                 rn.peripheral.writeValue(data!, for: rn.outputCharacteristic, type: CBCharacteristicWriteType.withResponse)
-            }
-            else {
-                systemOutput(str: "hit\r\n")
             }
         }
         
@@ -511,7 +519,9 @@ func fileSelect(_ rn: RN4020) {
 // 接続デバイスを選択するプロセス
 func selectDevice(_ rn: RN4020) {
     let standardInput = FileHandle.standardInput
+    systemOutput(str: "~. : quit\r\n")
     systemOutput(str: "Please Select Device Number\r\n")
+    systemOutput(str: "Scanning ...\r\n")
     // 標準入力を待ち続ける
     while true {
         // 標準入力
@@ -564,13 +574,15 @@ func waiting(_ rn: RN4020) {
     // 5秒待つ
     DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
         // 接続できなかったとき
-        if !connection {
+        if !connection && !disconnect {
             // 接続をキャンセルする
             rn.centralManager.cancelPeripheralConnection(rn.peripheral)
             systemOutput(str: "\r\n" + rn.peripheral.name! + " is not found\r\n")
             // プログラムを終了する
             close(rn)
         }
+        connection = false
+        disconnect = false
     }
 }
 
@@ -640,7 +652,7 @@ while running == true && runLoop.run(mode: RunLoop.Mode.default, before: distant
     }
     
     // 接続デバイスを選択する
-    if !enter {
+    if !enter && rn.generated {
         let dispatchQueue = DispatchQueue.global()
         dispatchQueue.async {
             // 別スレッドでデバイス選択を待つ
