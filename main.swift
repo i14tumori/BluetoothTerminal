@@ -166,6 +166,8 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         centralManager?.stopScan()
         //接続開始
         centralManager.connect(peripheral, options: nil)
+        
+        systemOutput(str: "Connecting ...\r\n")
     
         return true
     }
@@ -173,6 +175,7 @@ class RN4020: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     // ペリフェラルへの接続が成功すると呼ばれる
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         if peripheral.name != nil {
+            systemOutput(str: "\u{1b}[A\u{1b}[J")
             systemOutput(str: "Connection Success\r\ndeviceName : \(peripheral.name!)\r\n")
         }
         
@@ -549,6 +552,7 @@ func selectDevice(_ rn: RN4020) {
             standardOutput.write("\r\n".data(using: .utf8)!)
             // 選択番号が正しいとき
             if rn.connect(selectNumber) {
+                disconnect = false
                 // 接続されるのを待つ
                 waiting(rn)
                 // スレッド終了
@@ -571,8 +575,8 @@ func selectDevice(_ rn: RN4020) {
 
 // 接続待ち関数
 func waiting(_ rn: RN4020) {
-    // 5秒待つ
-    DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+    // 3秒待つ
+    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
         // 接続できなかったとき
         if !connection && !disconnect {
             // 接続をキャンセルする
