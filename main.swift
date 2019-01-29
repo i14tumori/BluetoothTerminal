@@ -14,6 +14,7 @@
 //  quit            : コマンドモード終了
 //  disconnect      : 通信切断
 //  ~.              : プログラム終了
+// help             : 使用可能コマンド表示
 
 import Foundation
 import CoreBluetooth
@@ -405,6 +406,10 @@ func writeProcess(_ rn: RN4020) {
                     // スレッド終了
                     return
                 }
+                // helpコマンド
+                else if cmdArray[0] == "help" {
+                    systemOutput(str: "~.         : プログラム終了\r\n~;         : コマンドモード\r\nquit       : コマンドモード終了\r\nsendFile   : 実行形式ファイル(.out, .exe, .bin)の送信 ※コマンドモード時のみ\r\ndisconnect : 通信の切断\r\n")
+                }
                 // コマンドではなかったとき
                 else {
                     if cmdArray[0] != "" {
@@ -522,7 +527,9 @@ func fileSelect(_ rn: RN4020) {
 // 接続デバイスを選択するプロセス
 func selectDevice(_ rn: RN4020) {
     let standardInput = FileHandle.standardInput
-    systemOutput(str: "~. : quit\r\n")
+    highLightColor = "\u{1b}[30m"
+    systemOutput(str: "~. : プログラム終了\r\n")
+    highLightColor = "\u{1b}[36m"
     systemOutput(str: "Please Select Device Number\r\n")
     systemOutput(str: "Scanning ...\r\n")
     // 標準入力を待ち続ける
@@ -673,7 +680,11 @@ while running == true && runLoop.run(mode: RunLoop.Mode.default, before: distant
         // 別スレッドでキーボード入力を待つ
         let dispatchQueue = DispatchQueue.global(qos: .default)
         dispatchQueue.async {
-            systemOutput(str: "Allow Writing\r\n\r\n")
+            systemOutput(str: "Allow Writing\r\n")
+            highLightColor = "\u{1b}[30m"
+            systemOutput(str: "~;   : コマンドモード\r\n")
+            systemOutput(str: "help : ヘルプコマンド\r\n\r\n")
+            highLightColor = "\u{1b}[36m"
             writeProcess(rn)
             // 通信切断コマンドの後で実行される
             systemOutput(str: "\r\nDisconnected\r\n\r\n")
