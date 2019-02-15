@@ -34,7 +34,8 @@ BlueTerm.shとmain.swiftをダウンロードして同一ディレクトリに�
   ~;         : コマンドモード
   quit       : コマンドモード終了
   sendFile   : 実行形式ファイル(.out, .exe, .bin)の送信   ※コマンドモード時のみ
-  disconnect : 通信の切断</pre>
+  disconnect : 通信の切断
+  help       : 使用可能コマンド表示</pre>
 
 ## 開発環境
 macOS Mojave(10.14.1)  
